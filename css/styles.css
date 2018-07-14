@@ -189,3 +189,72 @@ nav h1 a {
   text-transform: uppercase;
   border-radius:20px;
 }
+
+
+/* ---------------------- Shiv --------------------- */
+
+#restaurants-list {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-row-gap: 2vw;
+}
+
+.desc-wrapper {
+  padding: 1vw 4vw;
+}
+
+.container {
+  max-width:1200px;
+  margin:auto;
+  padding:0;
+  z-index:-1;
+}
+
+#restaurants-list {
+  z-index: -1;
+}
+.view-button {
+  position: absolute;
+  bottom:1.5vw;
+  right:1.5vw;
+  
+  box-shadow: 3px 3px 6px #BBB;
+}
+
+nav > h1 {
+  padding-top:2vw;
+  padding-left:2vw;
+  float:left;
+}
+
+nav > a {
+  padding-top:2vw;
+  padding-right:2vw;
+  float:right;
+  font-size: 1.2rem;
+}
+
+.filter-options {
+  padding:1.2vw;
+  box-shadow: 3px 4px 9px #AAA;
+  margin-bottom: 0.5vw;
+  
+}
+
+.filter-options {
+  text-align: right;
+  
+}
+
+#restaurants-list li a:active {
+  box-shadow:inset 0 0 10px #000000;
+ 
+}
+
+
+.inner-container {
+  width:90%;
+  margin:auto;
+}
+/* ------------------------------------------------- */
