@@ -420,3 +420,15 @@ table {
   
 }
 
+
+@media screen and (max-width:700px) {
+  nav h1 {
+    display:block;
+    width:100%;
+    text-align: center;
+  }
+
+  nav > a {
+    display: none;
+  }
+}
