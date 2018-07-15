@@ -420,15 +420,67 @@ table {
   
 }
 
+@media screen and (max-width:1010px){
+  #restaurants-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #restaurants-list li {
+    width:93%;
+    max-width:370px;
+  }
+}
 
 @media screen and (max-width:700px) {
+
+  html, body {
+    width:100%;
+  }
   nav h1 {
     display:block;
-    width:100%;
     text-align: center;
   }
 
   nav > a {
     display: none;
   }
+
+  
+
+  .filter-options h2 {
+    font-size: 1rem;
+    text-align: left;
+    width:100%;
+    margin:5px;
+  }
+
+  .filter-options select {
+    text-align: none;
+    display:inline;
+    width:48%;
+    font-size: 0.8rem;
+    margin:0.5%;
+    padding:0;
+  }
+
+  #neighborhoods-select {
+    float:left;
+  }
+
+  #map {
+    height:60vh;
+  }
+
+  #restaurants-list {
+    grid-template-columns: 1fr;
+    grid-row-gap: 4vh;
+  }
+
+  #restaurants-list li {
+    width:99%;
+    margin:auto;
+    max-width:370px;
+  }
 }
+
+
