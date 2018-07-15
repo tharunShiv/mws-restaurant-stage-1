@@ -468,7 +468,7 @@ table {
   }
 
   #map {
-    height:60vh;
+    height:65vh;
   }
 
   #restaurants-list {
@@ -480,6 +480,10 @@ table {
     width:99%;
     margin:auto;
     max-width:370px;
+  }
+
+  #breadcrumb {
+    width:100%;
   }
 }
 
