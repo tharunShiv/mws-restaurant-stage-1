@@ -351,11 +351,12 @@ nav > a {
   list-style-type: none;
   margin: 1vw auto;
   overflow: hidden;
-  padding: 20px 20px;
+  /* padding: 20px 20px; */
   position: relative;
   width: 85%;
   box-shadow: 3px 3px 7px #BBB;
   border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
   max-width: 380px;
 }
 
@@ -372,7 +373,8 @@ table {
 }
 
 .review-header {
-  padding:2vw;
+  padding:15px;
+  
   margin:0;
   box-shadow: 3px 3px 7px #BBB;
   background: #252831;
@@ -396,13 +398,13 @@ table {
 .rating {
   background: orange;
   /* width: 100%; */
-  float: left;
+  /* float: left; */
   /* display: block; */
   clear: both;
-  float: center;
+  /* float: center; */
   margin-right: 100%;
   /* overflow-wrap: initial; */
-  width: 80px;
+  width: 100px;
   padding: 10px;
   font-size: 0.9rem;
   letter-spacing: 1px;
@@ -410,11 +412,11 @@ table {
   font-weight: bold;
   color: white;
   box-shadow: 3px 3px 7px #BBB;
-
+  margin-left:3%;
 }
 
 .review-comments {
-  padding: 0px;
+  padding: 20px;
   line-height: 1.6rem;
   color: midnightblue;
   
@@ -487,4 +489,10 @@ table {
   }
 }
 
-
+.rating img {
+    float: right;
+    padding: 0;
+    margin: 0;
+    margin-left: -16px;
+    margin-top: 0.9px
+}

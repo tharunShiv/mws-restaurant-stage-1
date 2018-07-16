@@ -1,0 +1,26 @@
+@media screen and (max-width:700px) {
+    .inside #map-container {
+        width: 100%;
+    position: static;
+    height: 60vh;
+    margin-top: 130px;
+    }
+
+    #restaurant-container {
+        width:100%;
+    }
+
+    #reviews-container {
+        width:100%;
+    }
+
+    #reviews-list li {
+        width:90%;
+        margin-bottom:15px;
+    }
+
+
+    .inside #footer {
+        width:100%;
+    }
+}

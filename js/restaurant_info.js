@@ -164,7 +164,7 @@ createReviewHTML = (review) => {
   li.appendChild(div);
 
   const rating = document.createElement('p');
-  rating.innerHTML = `Rating: ${review.rating}`;
+  rating.innerHTML = `Rating: ${review.rating}<img src="img/rate.png" alt="stars"/>`;
   rating.className = 'rating';
   li.appendChild(rating);
 
