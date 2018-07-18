@@ -1,5 +1,14 @@
 # Mobile Web Specialist Certification Course
----
+
+### About the Project
+
+It is a Progressive Web App, which works with service-workers to produce websites that work offline too. They load faster, install on phone, desktop, and visually similar to hybrid apps.<br>
+<a href="https://tharunshiv.ml/pwas-adv-disadv/tharunshiv/">Click here to Read about PWAs here - Their Advantages and Disadvantages</a>
+
+### Live DEMO : 
+<a href="https://restaurantreviews.ml/">https://restaurantreviews.ml/</a>
+
+------
 #### _Three Stage Course Material Project - Restaurant Reviews_
 
 ## Project Overview: Stage 1
