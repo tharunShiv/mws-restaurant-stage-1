@@ -1,7 +1,13 @@
-/**
- * Common database helper functions.
- */
+var dbPromise;
 class DBHelper {
+  /**
+   * Open a IDB Database
+   */
+  static openDatabase() {
+    return idb.open("restaurants", 1, function(upgradeDb) {
+      upgradeDb.createObjectStore("restaurants", { keyPath: "id" });
+    });
+  }
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
@@ -9,29 +15,70 @@ class DBHelper {
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
     return `http://localhost:${port}/restaurants`;
-    //http://localhost:${port}
+  }
+
+  /**
+   * Show cached restaurants stored in IDB
+   */
+  static getCachedMessages() {
+    dbPromise = DBHelper.openDatabase();
+    return dbPromise.then(function(db) {
+      //if we showing posts or very first time of the page loading.
+      //we don't need to go to idb
+      if (!db) return;
+
+      var tx = db.transaction("restaurants");
+      var store = tx.objectStore("restaurants");
+
+      return store.getAll();
+    });
   }
 
   /**
    * Fetch all restaurants.
    */
-  static fetchRestaurants(callback, id) {
-    let fetchURL;
-    if (!id) {
-      fetchURL = DBHelper.DATABASE_URL;
-    } else {
-      fetchURL = DBHelper.DATABASE_URL + "/" + id;
-    }
-    fetch(fetchURL, { method: "GET" })
-      .then(response => {
-        response.json().then(restaurants => {
-          console.log("restaurants JSON: ", restaurants);
-          callback(null, restaurants);
+  static fetchRestaurants(callback) {
+    DBHelper.getCachedMessages().then(function(data) {
+      // if we have data to show then we pass it immediately.
+      if (data.length > 0) {
+        return callback(null, data);
+      }
+
+      // After passing the cached messages.
+      // We need to update the cache with fetching restaurants from network.
+      fetch(DBHelper.DATABASE_URL, { credentials: "same-origin" })
+        .then(res => {
+          console.log("res fetched is: ", res);
+          return res.json();
+        })
+        .then(data => {
+          dbPromise.then(function(db) {
+            if (!db) return db;
+            console.log("data fetched is: ", data);
+
+            var tx = db.transaction("restaurants", "readwrite");
+            var store = tx.objectStore("restaurants");
+
+            data.forEach(restaurant => store.put(restaurant));
+
+            // limit the data for 30
+            store
+              .openCursor(null, "prev")
+              .then(function(cursor) {
+                return cursor.advance(30);
+              })
+              .then(function deleteRest(cursor) {
+                if (!cursor) return;
+                cursor.delete();
+                return cursor.continue().then(deleteRest);
+              });
+          });
+          return callback(null, data);
+        })
+        .catch(err => {
+          return callback(err, null);
         });
-      })
-      .catch(error => {
-        callback(`Request failed , returned ${error}`, null);
-      });
+    });
   }
 
   /**
@@ -167,33 +214,20 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    return `img/${restaurant.photograph}.jpg`;
+    return `/img/${restaurant.photograph}.jpg`;
   }
 
   /**
    * Map marker for a restaurant.
    */
   static mapMarkerForRestaurant(restaurant, map) {
-    // https://leafletjs.com/reference-1.3.0.html#marker
-    const marker = new L.marker(
-      [restaurant.latlng.lat, restaurant.latlng.lng],
-      {
-        title: restaurant.name,
-        alt: restaurant.name,
-        url: DBHelper.urlForRestaurant(restaurant)
-      }
-    );
-    marker.addTo(newMap);
-    return marker;
-  }
-  /* static mapMarkerForRestaurant(restaurant, map) {
     const marker = new google.maps.Marker({
       position: restaurant.latlng,
       title: restaurant.name,
       url: DBHelper.urlForRestaurant(restaurant),
       map: map,
-      animation: google.maps.Animation.DROP}
-    );
+      animation: google.maps.Animation.DROP
+    });
     return marker;
-  } */
+  }
 }
