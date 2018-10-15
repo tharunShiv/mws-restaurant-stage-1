@@ -4,12 +4,12 @@ const image_cache = "rest-image-cache-v2";
 self.addEventListener("install", function(event) {
   event.waitUntil(
     caches.open(static_cache).then(function(cache) {
-      // TODO: remove localhost:8000 when relative issue is resolved
       return cache.addAll([
         "sw.js",
         "/",
         "index.html",
         "css/styles.css",
+        "css/stylesRes.css",
         "js/idb.js",
         "js/dbhelper.js",
         "js/main.js",
