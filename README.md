@@ -38,3 +38,11 @@ This repository uses [leafletjs](https://leafletjs.com/) with [Mapbox](https://w
 ### Note about ES6
 
 Most of the code in this project has been written to the ES6 JavaScript specification for compatibility with modern web browsers and future proofing JavaScript code. As much as possible, try to maintain use of ES6 in any additional JavaScript you write.
+
+## Project Overview: Stage 2
+
+Steps to get the project up and running
+
+    1. Run the development server : Download it from here: https://github.com/udacity/mws-restaurant-stage-2
+    2. npm i
+    3. Run this project : Open the project with VS Code & Open the index.html with Live Server
