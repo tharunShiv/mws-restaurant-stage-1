@@ -5,7 +5,7 @@
   <meta name="description" content="Application built using real time API from mapbox, and using Javascript. It is also a Progressive Web App, so it works offline also using Cache APIs">
   <meta name="keywords" content="pwa,mobile,web,specialist,project,challenge,restaurant,reviews,responsive,offline">
   <meta name="author" content="tharun shiv">
-
+  <meta name="theme-color" content="lightgray">
   <!-- Main CSS file -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type="text/css" href="css/styles.css">
@@ -83,12 +83,14 @@
   </footer>
   <!-- End footer -->
 
-  <!-- Beginning scripts -->
-  <script type="application/javascript" charset="utf-8" src="js/common.js"></script>
-  <!-- Main javascript file -->
-  <script type="text/javascript" src="js/restaurant_info.js"></script>
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADIwPHNvB_S8Uiro4IKVEZ0M512M1Illw&libraries=places&callback=initMap"></script>
+
+  <!-- Beginning scripts -->
+  <script async type="application/javascript" charset="utf-8" src="js/idb.js"></script>
+  <script async type="text/javascript" src="js/dbhelper.js"></script>
+  <!-- Main javascript file -->
+  <script async type="text/javascript" src="js/restaurant_info.js"></script>
   <!-- End scripts -->
 </body>
 

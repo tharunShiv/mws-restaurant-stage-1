@@ -1,38 +1,32 @@
-let restaurants,
-  observer_for_lazy_loading_images ,
-  neighborhoods,
-  cuisines 
+let restaurants, neighborhoods, cuisines;
+var newMap;
+var markers = [];
 
-var map
-var markers = []
+// lighthouse suggestion for automatic http->https redirect
+// if (location.protocol != 'https:')
+// {
+//  location.href = 'https://' + location.hostname + ':444/' + location.pathname + location.search
+// }
+
+//Registering service worker
+if (navigator.serviceWorker) {
+  navigator.serviceWorker
+    .register("sw.js", { scope: "/" })
+    .then(function() {
+      console.log("SW Registration success!");
+    })
+    .catch(function(e) {
+      console.log(e);
+    });
+}
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
-document.addEventListener('DOMContentLoaded', (event) => {
-  //registerServiceWorker();
+document.addEventListener("DOMContentLoaded", event => {
+  initMap(); // added
   fetchNeighborhoods();
   fetchCuisines();
-});
-
-
-/**
- * Will hot-load images as soon as the element is within the current viewport
- *
- */
-observer_for_lazy_loading_images = new IntersectionObserver(changes => {
-  for (const change of changes) {
-    if (!change.isIntersecting) return;
-    var targets = change.target.childNodes;
-    for (const target of targets) {
-      target.setAttribute('srcset',target.getAttribute('data-srcset'));
-      if (target.tagName === 'IMG') {
-        // src is not supported on SOURCE elements soon (deprecation warning)
-        target.setAttribute('src',target.getAttribute('data-src'));
-      }
-    }
-    observer_for_lazy_loading_images.unobserve(change.target);
-  }
 });
 
 /**
@@ -40,55 +34,57 @@ observer_for_lazy_loading_images = new IntersectionObserver(changes => {
  */
 fetchNeighborhoods = () => {
   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
+    if (error) {
+      // Got an error
       console.error(error);
     } else {
       self.neighborhoods = neighborhoods;
       fillNeighborhoodsHTML();
     }
   });
-}
+};
 
 /**
  * Set neighborhoods HTML.
  */
 fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
-  const select = document.getElementById('neighborhoods-select');
+  const select = document.getElementById("neighborhoods-select");
   neighborhoods.forEach(neighborhood => {
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.innerHTML = neighborhood;
     option.value = neighborhood;
     select.append(option);
   });
-}
+};
 
 /**
  * Fetch all cuisines and set their HTML.
  */
 fetchCuisines = () => {
   DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
+    if (error) {
+      // Got an error!
       console.error(error);
     } else {
       self.cuisines = cuisines;
       fillCuisinesHTML();
     }
   });
-}
+};
 
 /**
  * Set cuisines HTML.
  */
 fillCuisinesHTML = (cuisines = self.cuisines) => {
-  const select = document.getElementById('cuisines-select');
+  const select = document.getElementById("cuisines-select");
 
   cuisines.forEach(cuisine => {
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.innerHTML = cuisine;
     option.value = cuisine;
     select.append(option);
   });
-}
+};
 
 /**
  * Initialize Google map, called from HTML.
@@ -98,20 +94,19 @@ window.initMap = () => {
     lat: 40.722216,
     lng: -73.987501
   };
-  self.map = new google.maps.Map(document.getElementById('map'), {
+  self.map = new google.maps.Map(document.getElementById("map"), {
     zoom: 12,
     center: loc,
     scrollwheel: false
   });
   updateRestaurants();
-}
-
+};
 /**
  * Update page and map for current restaurants.
  */
 updateRestaurants = () => {
-  const cSelect = document.getElementById('cuisines-select');
-  const nSelect = document.getElementById('neighborhoods-select');
+  const cSelect = document.getElementById("cuisines-select");
+  const nSelect = document.getElementById("neighborhoods-select");
 
   const cIndex = cSelect.selectedIndex;
   const nIndex = nSelect.selectedIndex;
@@ -119,120 +114,186 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
-      //console.error(error);
-      // const ul = document.getElementById('restaurants-list');
-      // const li = document.createElement('li');
-      // li.innerHTML = '<p role="alert">You appear to be offline - go online to view restaurants</p>'
-      // ul.append(li);
-    } else {
-
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
-       // We dont want the observer to start looking for the element before content is loaded
-       mapObserver.observe(document.getElementById('map-container'));
+  DBHelper.fetchRestaurantByCuisineAndNeighborhood(
+    cuisine,
+    neighborhood,
+    (error, restaurants) => {
+      if (error) {
+        // Got an error!
+        console.error(error);
+      } else {
+        resetRestaurants(restaurants);
+        fillRestaurantsHTML();
+      }
     }
-  })
-}
+  );
+};
 
 /**
  * Clear current restaurants, their HTML and remove their map markers.
  */
-resetRestaurants = (restaurants) => {
+resetRestaurants = restaurants => {
   // Remove all restaurants
   self.restaurants = [];
-  const ul = document.getElementById('restaurants-list');
-  ul.innerHTML = '';
+  const ul = document.getElementById("restaurants-list");
+  ul.innerHTML = "";
 
   // Remove all map markers
-  self.markers.forEach(m => m.setMap(null));
+  if (self.markers) {
+    self.markers.forEach(marker => marker.remove());
+  }
   self.markers = [];
   self.restaurants = restaurants;
-}
+};
 
 /**
  * Create all restaurants HTML and add them to the webpage.
  */
 fillRestaurantsHTML = (restaurants = self.restaurants) => {
-  const ul = document.getElementById('restaurants-list');
+  const ul = document.getElementById("restaurants-list");
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
-}
+
+  try {
+    addMarkersToMap();
+  } catch (e) {}
+};
 
 /**
  * Create restaurant HTML.
  */
-createRestaurantHTML = (restaurant) => {
-  const li = document.createElement('li');
- 
-  const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.setAttribute('alt' , "restaurant image") ;
-
-/**************************************** */
-  /// i do not know if that will affect on performance optimization 
-  // DBHelper.getSourcesForRestaurant(restaurant).map(el => {
-  //   el.setAttribute('alt', 'Picture of ' + restaurant.name + " restaurant");
-  //   newImage.append(el);
-  // });
-  /************************************************* */
- 
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
-
-  li.append(image);
-  observer_for_lazy_loading_images.observe(image);
-
-  const name = document.createElement('h4');
+createRestaurantHTML = restaurant => {
+  const li = document.createElement("li");
+  const name = document.createElement("h1");
   name.innerHTML = restaurant.name;
+  name.setAttribute("tabIndex", "0");
   li.append(name);
 
+  // picture element with WEBP source set for browsers that support it
+  const picture = document.createElement("picture");
+  picture.className = "restaurant-img";
+  picture.setAttribute(
+    "data-srcset",
+    DBHelper.imageUrlForRestaurant(restaurant) + ".webp"
+  );
+  picture.setAttribute("alt", restaurant.name);
+  picture.setAttribute("title", restaurant.name);
+  li.append(picture);
 
-  const neighborhood = document.createElement('p');
+  const source = document.createElement("source");
+  source.setAttribute("type", "image/webp");
+  source.setAttribute("srcset", DBHelper.LOADING_IMAGE);
+  picture.append(source);
+
+  // fallback img element with JPG sources that don't support the above
+  const image = document.createElement("img");
+  image.className = "restaurant-img";
+  image.setAttribute(
+    "data-src",
+    DBHelper.imageUrlForRestaurant(restaurant) + ".jpg"
+  );
+  image.setAttribute("src", DBHelper.LOADING_IMAGE);
+  image.setAttribute("alt", restaurant.name);
+  image.setAttribute("title", restaurant.name);
+  picture.append(image);
+
+  const neighborhood = document.createElement("p");
   neighborhood.innerHTML = restaurant.neighborhood;
+  neighborhood.setAttribute("tabIndex", "0");
   li.append(neighborhood);
 
-  const address = document.createElement('p');
+  const address = document.createElement("p");
   address.innerHTML = restaurant.address;
+  address.setAttribute("tabIndex", "0");
   li.append(address);
 
-  const more = document.createElement('a');
-  more.innerHTML = 'View Details';
-  
-  
+  const more = document.createElement("a");
+  more.innerHTML = "View Details";
   more.href = DBHelper.urlForRestaurant(restaurant);
+  li.append(more);
 
-  li.append(more)
-  li.setAttribute('tabindex' , "0") ;
-
-
-  return li
-}
+  return li;
+};
 
 /**
  * Add markers for current restaurants to the map.
  */
+// addMarkersToMap = (restaurants = self.restaurants) => {
+//   restaurants.forEach(restaurant => {
+//     // Add marker to the map
+//     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.newMap);
+//     marker.on("click", onClick);
+//     function onClick() {
+//       window.location.href = marker.options.url;
+//     }
+//     self.markers.push(marker);
+//   });
+// };
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
+    google.maps.event.addListener(marker, "click", () => {
+      window.location.href = marker.url;
     });
     self.markers.push(marker);
   });
+};
+
+// // bypassing map in keyboard navigation
+// document.querySelector("#home").addEventListener("keydown", function(event) {
+//   if (event.keyCode == 9 && !event.shiftKey) {
+//     event.preventDefault();
+//     document.querySelector("#neighborhoods-select").focus();
+//   }
+// });
+
+document
+  .querySelector("#neighborhoods-select")
+  .addEventListener("keydown", function(event) {
+    if (event.keyCode == 9 && event.shiftKey) {
+      event.preventDefault();
+      document.querySelector("#home").focus();
+    }
+  });
+
+//******* lazy loading of offscreen images
+
+// function to detect if element is visible (c) https://stackoverflow.com/a/12418814/961695
+function inViewport(el) {
+  var r, html;
+  if (!el || 1 !== el.nodeType) {
+    return false;
+  }
+  html = document.documentElement;
+  r = el.getBoundingClientRect();
+
+  return (
+    !!r &&
+    r.bottom >= 0 &&
+    r.right >= 0 &&
+    r.top <= html.clientHeight &&
+    r.left <= html.clientWidth
+  );
 }
 
+function lazyLoad() {
+  for (var pic of document.querySelectorAll("picture[data-srcset]")) {
+    if (inViewport(pic)) {
+      let source = pic.querySelector("source");
 
+      source.setAttribute("srcset", pic.getAttribute("data-srcset"));
+      pic.removeAttribute("data-srcset");
 
-// registerServiceWorker = () => {
-//   if (!navigator.serviceWorker) return;
+      let img = pic.querySelector("img");
+      img.setAttribute("src", img.getAttribute("data-src"));
+      img.removeAttribute("data-src");
+    }
+  }
+}
 
-//   navigator.serviceWorker.register('/sw.js').then(() => {
-//     console.log('Service worker registered!')
-//   }).catch(() => {
-//     console.log('Failed to register service worker.')
-//   })
-// }
+addEventListener("DOMContentLoaded", lazyLoad, false);
+addEventListener("load", lazyLoad, false);
+addEventListener("scroll", lazyLoad, false);
+addEventListener("resize", lazyLoad, false);

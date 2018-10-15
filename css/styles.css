@@ -125,7 +125,7 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  height: 75vh;
+  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -135,7 +135,7 @@ nav h1 a {
   /* height: 50px; */
   background-color: #3397db;
   align-items: center;
-  height: 13vh;
+  /* height: 13vh; */
 }
 .filter-options h2 {
   color: white;

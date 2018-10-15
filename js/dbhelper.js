@@ -1,105 +1,108 @@
-var dbPromise;
+var dbPromise = idb.open("restaurant_reviews", 1, function(upgradeDB) {
+  upgradeDB.createObjectStore("restaurants", { keyPath: "id" });
+});
+
+/**
+ * Common database helper functions.
+ */
 class DBHelper {
-  /**
-   * Open a IDB Database
-   */
-  static openDatabase() {
-    return idb.open("restaurants", 1, function(upgradeDb) {
-      upgradeDb.createObjectStore("restaurants", { keyPath: "id" });
-    });
-  }
-  /**
-   * Database URL.
-   * Change this to restaurants.json file location on your server.
-   */
+  /* Database URL */
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+
+    return `http://localhost:${port}/restaurants`; //USE THIS TO TEST ON DEV MACHINE ITSELF, COMMENT OTHERWISE
+    //return `http://192.168.1.26:${port}/restaurants`;
+    //return `http://10.100.102.18:${port}/restaurants`; //USE THIS TO TEST OVER NETWORK FROM REMOTE DEVICE (use correct IP) COMMENT OTHERWISE
   }
 
-  /**
-   * Show cached restaurants stored in IDB
-   */
-  static getCachedMessages() {
-    dbPromise = DBHelper.openDatabase();
-    return dbPromise.then(function(db) {
-      //if we showing posts or very first time of the page loading.
-      //we don't need to go to idb
-      if (!db) return;
+  static get NO_IMAGE() {
+    return "noimage";
+  }
 
-      var tx = db.transaction("restaurants");
-      var store = tx.objectStore("restaurants");
-
-      return store.getAll();
-    });
+  static get LOADING_IMAGE() {
+    return "img/loading.svg";
   }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    DBHelper.getCachedMessages().then(function(data) {
-      // if we have data to show then we pass it immediately.
-      if (data.length > 0) {
-        return callback(null, data);
-      }
+    // Trying to get restaurants from IndexDB
+    dbPromise
+      .then(function(db) {
+        var tx = db.transaction("restaurants");
+        var restaurantStore = tx.objectStore("restaurants");
+        return restaurantStore.getAll();
+      })
+      .then(function(restaurants) {
+        if (restaurants.length !== 0) {
+          // if restaurants already in IndexDB - return them
 
-      // After passing the cached messages.
-      // We need to update the cache with fetching restaurants from network.
-      fetch(DBHelper.DATABASE_URL, { credentials: "same-origin" })
-        .then(res => {
-          console.log("res fetched is: ", res);
-          return res.json();
-        })
-        .then(data => {
-          dbPromise.then(function(db) {
-            if (!db) return db;
-            console.log("data fetched is: ", data);
+          callback(null, restaurants);
+        } else {
+          // If restaurants aren't in DB yet - fetch them from API
 
-            var tx = db.transaction("restaurants", "readwrite");
-            var store = tx.objectStore("restaurants");
+          fetch(DBHelper.DATABASE_URL)
+            .then(response => response.json())
+            .then(restaurants => {
+              // Once restaurants are successfully fetched - add them to IndexDB
+              dbPromise
+                .then(function(db) {
+                  var tx = db.transaction("restaurants", "readwrite");
+                  var restaurantStore = tx.objectStore("restaurants");
 
-            data.forEach(restaurant => store.put(restaurant));
+                  for (let restaurant of restaurants) {
+                    restaurantStore.put(restaurant);
+                  }
 
-            // limit the data for 30
-            store
-              .openCursor(null, "prev")
-              .then(function(cursor) {
-                return cursor.advance(30);
-              })
-              .then(function deleteRest(cursor) {
-                if (!cursor) return;
-                cursor.delete();
-                return cursor.continue().then(deleteRest);
-              });
-          });
-          return callback(null, data);
-        })
-        .catch(err => {
-          return callback(err, null);
-        });
-    });
+                  return tx.complete;
+                })
+                .then(function() {
+                  // successfully added restaurants to IndexDB
+
+                  console.log("Restaurants added to Index DB successfully");
+                })
+                .catch(function(error) {
+                  // failed adding restaurants to IndexDB
+
+                  console.log(error);
+                })
+                .finally(function(error) {
+                  // no matter whether adding to IndexDB was successfull or not - returning fetched data to caller
+
+                  callback(null, restaurants);
+                });
+            })
+            .catch(error => callback(error, null));
+        }
+      });
   }
 
   /**
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id, callback) {
-    // fetch all restaurants with proper error handling.
-    DBHelper.fetchRestaurants((error, restaurants) => {
-      if (error) {
-        callback(error, null);
-      } else {
-        const restaurant = restaurants.find(r => r.id == id);
+    // Trying to get restaurant by ID  from IndexDB
+    dbPromise
+      .then(function(db) {
+        var tx = db.transaction("restaurants");
+        var restaurantStore = tx.objectStore("restaurants");
+        return restaurantStore.get(parseInt(id));
+      })
+      .then(function(restaurant) {
         if (restaurant) {
-          // Got the restaurant
+          // if restaurants already in IndexDB - return them
+
           callback(null, restaurant);
         } else {
-          // Restaurant does not exist in the database
-          callback("Restaurant does not exist", null);
+          // if restaurants aren't in Index DB - call API
+
+          fetch(DBHelper.DATABASE_URL + "/" + id)
+            .then(response => response.json())
+            .then(restaurants => callback(null, restaurants))
+            .catch(error => callback(error, null));
         }
-      }
-    });
+      });
   }
 
   /**
@@ -214,12 +217,27 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    return `/img/${restaurant.photograph}.jpg`;
+    return `img/${
+      restaurant.photograph ? restaurant.photograph : DBHelper.NO_IMAGE
+    }`;
   }
 
   /**
    * Map marker for a restaurant.
    */
+  // static mapMarkerForRestaurant(restaurant, map) {
+  //   // https://leafletjs.com/reference-1.3.0.html#marker
+  //   const marker = new L.marker(
+  //     [restaurant.latlng.lat, restaurant.latlng.lng],
+  //     {
+  //       title: restaurant.name,
+  //       alt: restaurant.name,
+  //       url: DBHelper.urlForRestaurant(restaurant)
+  //     }
+  //   );
+  //   marker.addTo(newMap);
+  //   return marker;
+  // }
   static mapMarkerForRestaurant(restaurant, map) {
     const marker = new google.maps.Marker({
       position: restaurant.latlng,
