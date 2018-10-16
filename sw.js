@@ -8,6 +8,7 @@ self.addEventListener("install", function(event) {
         "sw.js",
         "/",
         "index.html",
+        "restaurant.html",
         "css/styles.css",
         "css/stylesRes.css",
         "js/idb.js",
