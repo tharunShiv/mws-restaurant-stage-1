@@ -1,20 +1,21 @@
-const static_cache = "rest-static-cache-v1";
-const image_cache = "rest-image-cache-v2";
+const static_cache = "resto-static-cache-v1";
+const image_cache = "resto-image-cache-v2";
 
 self.addEventListener("install", function(event) {
   event.waitUntil(
     caches.open(static_cache).then(function(cache) {
       return cache.addAll([
-        "sw.js",
+        "/sw.js",
         "/",
-        "index.html",
-        "restaurant.html",
-        "css/styles.css",
-        "css/stylesRes.css",
-        "js/idb.js",
-        "js/dbhelper.js",
-        "js/main.js",
-        "js/restaurant_info.js"
+        "/index.html",
+        "/restaurant.html",
+        "/css/styles.css",
+        "/css/styleRes.css",
+        "/js/idb.js",
+        "/js/dbhelper.js",
+        "/js/main.js",
+        "/js/restaurant_info.js",
+        "/manifest.json"
       ]);
     })
   );

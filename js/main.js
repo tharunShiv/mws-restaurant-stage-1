@@ -11,7 +11,7 @@ var markers = [];
 //Registering service worker
 if (navigator.serviceWorker) {
   navigator.serviceWorker
-    .register("sw.js", { scope: "/" })
+    .register("/sw.js", { scope: "/" })
     .then(function() {
       console.log("SW Registration success!");
     })

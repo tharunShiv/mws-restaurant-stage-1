@@ -1,6 +1,17 @@
 let restaurant;
 var map;
 
+//Registering service worker
+if (navigator.serviceWorker) {
+  navigator.serviceWorker
+    .register("/sw.js", { scope: "/" })
+    .then(function() {
+      console.log("SW Registration success!");
+    })
+    .catch(function(e) {
+      console.log(e);
+    });
+}
 /**
  * Initialize Google map, called from HTML.
  */
@@ -62,7 +73,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const image = document.getElementById("restaurant-img");
   image.className = "restaurant-img";
   image.setAttribute("alt", image_alt);
-  image.src = "img/" + restaurant.photograph + ".webp";
+  image.src = "img/" + restaurant.photograph + ".jpg";
 
   const cuisine = document.getElementById("restaurant-cuisine");
   cuisine.innerHTML = restaurant.cuisine_type;

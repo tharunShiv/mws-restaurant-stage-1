@@ -41,8 +41,15 @@ Most of the code in this project has been written to the ES6 JavaScript specific
 
 ## Project Overview: Stage 2
 
-Steps to get the project up and running
+## Steps to get the project up and running
 
     1. Run the development server : Download it from here: https://github.com/udacity/mws-restaurant-stage-2
-    2. npm i
-    3. Run this project : Open the project with VS Code & Open the index.html with Live Server
+    2. Run the development server by using the command: 'node server' at mws-restaurant-stage-2 directory
+    3. Go to this project directory: Install Live Server
+    4. npm install -g live-server
+    5. Come to this project directory again and use the command 'live-server'
+    6. Open the url using Chrome.
+
+## Project Overview
+
+For the Restaurant Reviews projects, you will incrementally convert a static webpage to a mobile-ready web application. In Stage Two, you will take the responsive, accessible design you built in Stage One and connect it to an external server. You’ll begin by using asynchronous JavaScript to request JSON data from the server. You’ll store data received from the server in an offline database using IndexedDB, which will create an app shell architecture. Finally, you’ll work to optimize your site to meet performance benchmarks, which you’ll test using Lighthouse.
