@@ -53,3 +53,17 @@ Most of the code in this project has been written to the ES6 JavaScript specific
 ## Project Overview
 
 For the Restaurant Reviews projects, you will incrementally convert a static webpage to a mobile-ready web application. In Stage Two, you will take the responsive, accessible design you built in Stage One and connect it to an external server. You’ll begin by using asynchronous JavaScript to request JSON data from the server. You’ll store data received from the server in an offline database using IndexedDB, which will create an app shell architecture. Finally, you’ll work to optimize your site to meet performance benchmarks, which you’ll test using Lighthouse.
+
+## Tested scenarios
+
+## Online
+
+1. index.html working
+2. restaurant.html working
+3. Lazy Loading of images working
+
+## Offline
+
+1. index.html working
+2. restaurant.html working ( the pages which were visited when online )
+3. The images which were loaded when online, because of lazy loading ( the tradeoff )
