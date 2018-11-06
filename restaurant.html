@@ -49,6 +49,10 @@
 
   <!-- Beginning main -->
   <main id="maincontent">
+    <p id="offline" class="message warn">You're offline and viewing stored data.</p>
+    <p id="no-data" class="message error">You're offline and local data is unavailable.</p>
+    <p id="data-saved" class="message success">Server data was saved for offline mode.</p>
+    <p id="save-error" class="message error">Server data couldn't be saved offline.</p>
     <!-- Beginning map -->
     <section id="map-container">
       <div id="map" aria-hidden="true" role="application"></div>
@@ -66,11 +70,18 @@
     </section>
     <!-- end restaurant -->
     <!-- Beginning reviews -->
+    <div id="full">
+      <a class="card-actions" id="review-link" class="card-actions-link" onclick="moveToReview()">Add Review</a>
+    </div>
     <section id="reviews-container">
+
+      <br/>
       <div class="inner-container">
         <ul id="reviews-list"></ul>
       </div>
+
     </section>
+
     <!-- End reviews -->
   </main>
   <!-- End main -->

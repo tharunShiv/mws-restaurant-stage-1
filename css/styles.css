@@ -510,3 +510,49 @@ table {
   margin-left: -16px;
   margin-top: 0.9px;
 }
+
+#full {
+  width: 100%;
+}
+
+.card-actions {
+  background-color: #fff;
+  padding: 10px;
+  width: 50%;
+  margin: auto;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  text-align: center;
+  box-shadow: #aaa 2px 2px;
+}
+
+.form-bound {
+  width: 100%;
+}
+
+.review-form {
+  padding: 20px;
+  width: 50%;
+  border: 2px solid #aaa;
+
+  margin: 15px;
+}
+
+.review-form input {
+  padding: 10px;
+  width: 50%;
+  margin: 15px;
+}
+
+#restaurant-rating-select {
+  padding: 10px;
+  width: 25%;
+  margin: 15px;
+}
+
+#offline,
+#no-data,
+#data-saved,
+#save-error {
+  display: none;
+}

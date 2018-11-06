@@ -249,14 +249,14 @@ addMarkersToMap = (restaurants = self.restaurants) => {
 //   }
 // });
 
-document
-  .querySelector("#neighborhoods-select")
-  .addEventListener("keydown", function(event) {
-    if (event.keyCode == 9 && event.shiftKey) {
-      event.preventDefault();
-      document.querySelector("#home").focus();
-    }
-  });
+// document
+//   .querySelector("#neighborhoods-select")
+//   .addEventListener("keydown", function(event) {
+//     if (event.keyCode == 9 && event.shiftKey) {
+//       event.preventDefault();
+//       document.querySelector("#home").focus();
+//     }
+//   });
 
 //******* lazy loading of offscreen images
 

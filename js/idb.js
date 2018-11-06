@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 (function() {
   function toArray(arr) {
@@ -49,7 +49,12 @@
     });
   }
 
-  function proxyRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+  function proxyRequestMethods(
+    ProxyClass,
+    targetProp,
+    Constructor,
+    properties
+  ) {
     properties.forEach(function(prop) {
       if (!(prop in Constructor.prototype)) return;
       ProxyClass.prototype[prop] = function() {
@@ -67,7 +72,12 @@
     });
   }
 
-  function proxyCursorRequestMethods(ProxyClass, targetProp, Constructor, properties) {
+  function proxyCursorRequestMethods(
+    ProxyClass,
+    targetProp,
+    Constructor,
+    properties
+  ) {
     properties.forEach(function(prop) {
       if (!(prop in Constructor.prototype)) return;
       ProxyClass.prototype[prop] = function() {
@@ -80,24 +90,19 @@
     this._index = index;
   }
 
-  proxyProperties(Index, '_index', [
-    'name',
-    'keyPath',
-    'multiEntry',
-    'unique'
+  proxyProperties(Index, "_index", ["name", "keyPath", "multiEntry", "unique"]);
+
+  proxyRequestMethods(Index, "_index", IDBIndex, [
+    "get",
+    "getKey",
+    "getAll",
+    "getAllKeys",
+    "count"
   ]);
 
-  proxyRequestMethods(Index, '_index', IDBIndex, [
-    'get',
-    'getKey',
-    'getAll',
-    'getAllKeys',
-    'count'
-  ]);
-
-  proxyCursorRequestMethods(Index, '_index', IDBIndex, [
-    'openCursor',
-    'openKeyCursor'
+  proxyCursorRequestMethods(Index, "_index", IDBIndex, [
+    "openCursor",
+    "openKeyCursor"
   ]);
 
   function Cursor(cursor, request) {
@@ -105,20 +110,17 @@
     this._request = request;
   }
 
-  proxyProperties(Cursor, '_cursor', [
-    'direction',
-    'key',
-    'primaryKey',
-    'value'
+  proxyProperties(Cursor, "_cursor", [
+    "direction",
+    "key",
+    "primaryKey",
+    "value"
   ]);
 
-  proxyRequestMethods(Cursor, '_cursor', IDBCursor, [
-    'update',
-    'delete'
-  ]);
+  proxyRequestMethods(Cursor, "_cursor", IDBCursor, ["update", "delete"]);
 
   // proxy 'next' methods
-  ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
+  ["advance", "continue", "continuePrimaryKey"].forEach(function(methodName) {
     if (!(methodName in IDBCursor.prototype)) return;
     Cursor.prototype[methodName] = function() {
       var cursor = this;
@@ -145,33 +147,31 @@
     return new Index(this._store.index.apply(this._store, arguments));
   };
 
-  proxyProperties(ObjectStore, '_store', [
-    'name',
-    'keyPath',
-    'indexNames',
-    'autoIncrement'
+  proxyProperties(ObjectStore, "_store", [
+    "name",
+    "keyPath",
+    "indexNames",
+    "autoIncrement"
   ]);
 
-  proxyRequestMethods(ObjectStore, '_store', IDBObjectStore, [
-    'put',
-    'add',
-    'delete',
-    'clear',
-    'get',
-    'getAll',
-    'getKey',
-    'getAllKeys',
-    'count'
+  proxyRequestMethods(ObjectStore, "_store", IDBObjectStore, [
+    "put",
+    "add",
+    "delete",
+    "clear",
+    "get",
+    "getAll",
+    "getKey",
+    "getAllKeys",
+    "count"
   ]);
 
-  proxyCursorRequestMethods(ObjectStore, '_store', IDBObjectStore, [
-    'openCursor',
-    'openKeyCursor'
+  proxyCursorRequestMethods(ObjectStore, "_store", IDBObjectStore, [
+    "openCursor",
+    "openKeyCursor"
   ]);
 
-  proxyMethods(ObjectStore, '_store', IDBObjectStore, [
-    'deleteIndex'
-  ]);
+  proxyMethods(ObjectStore, "_store", IDBObjectStore, ["deleteIndex"]);
 
   function Transaction(idbTransaction) {
     this._tx = idbTransaction;
@@ -192,14 +192,9 @@
     return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
   };
 
-  proxyProperties(Transaction, '_tx', [
-    'objectStoreNames',
-    'mode'
-  ]);
+  proxyProperties(Transaction, "_tx", ["objectStoreNames", "mode"]);
 
-  proxyMethods(Transaction, '_tx', IDBTransaction, [
-    'abort'
-  ]);
+  proxyMethods(Transaction, "_tx", IDBTransaction, ["abort"]);
 
   function UpgradeDB(db, oldVersion, transaction) {
     this._db = db;
@@ -208,19 +203,14 @@
   }
 
   UpgradeDB.prototype.createObjectStore = function() {
-    return new ObjectStore(this._db.createObjectStore.apply(this._db, arguments));
+    return new ObjectStore(
+      this._db.createObjectStore.apply(this._db, arguments)
+    );
   };
 
-  proxyProperties(UpgradeDB, '_db', [
-    'name',
-    'version',
-    'objectStoreNames'
-  ]);
+  proxyProperties(UpgradeDB, "_db", ["name", "version", "objectStoreNames"]);
 
-  proxyMethods(UpgradeDB, '_db', IDBDatabase, [
-    'deleteObjectStore',
-    'close'
-  ]);
+  proxyMethods(UpgradeDB, "_db", IDBDatabase, ["deleteObjectStore", "close"]);
 
   function DB(db) {
     this._db = db;
@@ -230,28 +220,25 @@
     return new Transaction(this._db.transaction.apply(this._db, arguments));
   };
 
-  proxyProperties(DB, '_db', [
-    'name',
-    'version',
-    'objectStoreNames'
-  ]);
+  proxyProperties(DB, "_db", ["name", "version", "objectStoreNames"]);
 
-  proxyMethods(DB, '_db', IDBDatabase, [
-    'close'
-  ]);
+  proxyMethods(DB, "_db", IDBDatabase, ["close"]);
 
   // Add cursor iterators
   // TODO: remove this once browsers do the right thing with promises
-  ['openCursor', 'openKeyCursor'].forEach(function(funcName) {
+  ["openCursor", "openKeyCursor"].forEach(function(funcName) {
     [ObjectStore, Index].forEach(function(Constructor) {
       // Don't create iterateKeyCursor if openKeyCursor doesn't exist.
       if (!(funcName in Constructor.prototype)) return;
 
-      Constructor.prototype[funcName.replace('open', 'iterate')] = function() {
+      Constructor.prototype[funcName.replace("open", "iterate")] = function() {
         var args = toArray(arguments);
         var callback = args[args.length - 1];
         var nativeObject = this._store || this._index;
-        var request = nativeObject[funcName].apply(nativeObject, args.slice(0, -1));
+        var request = nativeObject[funcName].apply(
+          nativeObject,
+          args.slice(0, -1)
+        );
         request.onsuccess = function() {
           callback(request.result);
         };
@@ -286,13 +273,19 @@
 
   var exp = {
     open: function(name, version, upgradeCallback) {
-      var p = promisifyRequestCall(indexedDB, 'open', [name, version]);
+      var p = promisifyRequestCall(indexedDB, "open", [name, version]);
       var request = p.request;
 
       if (request) {
         request.onupgradeneeded = function(event) {
           if (upgradeCallback) {
-            upgradeCallback(new UpgradeDB(request.result, event.oldVersion, request.transaction));
+            upgradeCallback(
+              new UpgradeDB(
+                request.result,
+                event.oldVersion,
+                request.transaction
+              )
+            );
           }
         };
       }
@@ -302,15 +295,170 @@
       });
     },
     delete: function(name) {
-      return promisifyRequestCall(indexedDB, 'deleteDatabase', [name]);
+      return promisifyRequestCall(indexedDB, "deleteDatabase", [name]);
     }
   };
 
-  if (typeof module !== 'undefined') {
+  if (typeof module !== "undefined") {
     module.exports = exp;
     module.exports.default = module.exports;
-  }
-  else {
+  } else {
     self.idb = exp;
   }
-}());
+})();
+
+/*
+ * IndexedDB
+ */
+
+// Create the IndexedDB database.
+function createIndexedDB() {
+  // Checking for IndexedDB support.
+  if (!("indexedDB" in window)) {
+    console.log("[INFO] This browser doesn't support IndexedDB.");
+    return null;
+  }
+  // Opening a database.
+  return idb.open("restaurant_reviews", 3, function(upgradeDb) {
+    switch (upgradeDb.oldVersion) {
+      case 0:
+      // A placeholder case so that the switch block will
+      // execute when the database is first created
+      // (oldVersion is 0)
+      case 1:
+        // Creating object store for restaurants.
+        // A key path is a property that always exists and contains a unique
+        // value. Objects added to this store must have an id property and
+        // the value must be unique.
+        if (!upgradeDb.objectStoreNames.contains("restaurants")) {
+          console.log("[DEBUG] Creating a new object store for restaurants.");
+          const restaurantsOS = upgradeDb.createObjectStore("restaurants", {
+            keyPath: "id"
+          });
+        }
+      case 2:
+        // Creating object store for reviews, index for restaurant_id.
+        if (!upgradeDb.objectStoreNames.contains("reviews")) {
+          // Using a key generator as users can post reviews.
+          console.log("[DEBUG] Creating a new object store for reviews.");
+          const reviewsOS = upgradeDb.createObjectStore("reviews", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+          console.log(
+            "[DEBUG] Creating a restaurant_id index on object store reviews"
+          );
+          reviewsOS.createIndex("restaurant_id", "restaurant_id", {
+            unique: false
+          });
+        }
+    }
+  });
+}
+
+// Database object.
+const dbPromise = createIndexedDB();
+
+/**
+ * Write restaurants data to object store restaurants.
+ * The saveRestaurantsDataLocally function takes an array of objects and adds
+ * or updates each object to the IndexedDB database. The store.put operations
+ * happen inside a Promise.all. This way if any of the put operations fail,
+ * we can catch the error and abort the transaction. Aborting the transaction
+ * rolls back all the changes that happened in the transaction so that if any
+ * of the events fail to put, none of them will be added to the object store.
+ */
+function saveRestaurantsDataLocally(restaurants) {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("restaurants", "readwrite");
+    const store = tx.objectStore("restaurants");
+    // Don't use Promise.all when there's only one restaurant.
+    if (restaurants.length > 1) {
+      return Promise.all(
+        restaurants.map(restaurant => store.put(restaurant))
+      ).catch(() => {
+        tx.abort();
+        throw Error("[ERROR] Restaurants were not added to the store.");
+      });
+    } else {
+      store.put(restaurants);
+      console.log("savedRestaurantsDataLocally");
+    }
+  });
+}
+
+// Get restaurants data from object store restaurants.
+function getLocalRestaurantsData() {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("restaurants", "readonly");
+    const store = tx.objectStore("restaurants");
+    return store.getAll();
+  });
+}
+
+// Get restaurant by id data from object store restaurants.
+function getLocalRestaurantByIdData(id) {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("restaurants", "readonly");
+    const store = tx.objectStore("restaurants");
+    // Make sure you're using a number for id.
+    return store.get(parseInt(id));
+  });
+}
+
+/**
+ * Write reviews data to object store reviews.
+ * The saveReviewsDataLocally function takes an array of objects and adds
+ * or updates each object to the IndexedDB database. The store.put operations
+ * happen inside a Promise.all. This way if any of the put operations fail,
+ * we can catch the error and abort the transaction. Aborting the transaction
+ * rolls back all the changes that happened in the transaction so that if any
+ * of the events fail to put, none of them will be added to the object store.
+ *
+ * TODO: this function doesn't seem to work when there's only one review...
+ * Error: Uncaught (in promise) DOMException: Failed to execute 'put' on
+ * 'IDBObjectStore': Evaluating the object store's key path did not yield
+ * a value.
+ */
+function saveReviewsDataLocally(reviews) {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("reviews", "readwrite");
+    const store = tx.objectStore("reviews");
+    // Don't use Promise.all when there's only one review.
+    if (reviews.length > 1) {
+      return Promise.all(reviews.map(review => store.put(review))).catch(() => {
+        tx.abort();
+        throw Error("[ERROR] Reviews were not added to the store.");
+      });
+    } else {
+      store.put(reviews);
+    }
+  });
+}
+
+// Get reviews by id data from object store reviews, using the index on
+// restaurant_id
+function getLocalReviewsByIdData(id) {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("reviews", "readonly");
+    const store = tx.objectStore("reviews");
+    const index = store.index("restaurant_id");
+    // Make sure you're using a number for id.
+    return index.getAll(parseInt(id));
+  });
+}

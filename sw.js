@@ -1,5 +1,5 @@
-const static_cache = "resto-static-cache-v1";
-const image_cache = "resto-image-cache-v2";
+const static_cache = "rest-static-cache-v1";
+const image_cache = "rest-image-cache-v2";
 
 self.addEventListener("install", function(event) {
   event.waitUntil(
@@ -9,6 +9,7 @@ self.addEventListener("install", function(event) {
         "/",
         "/index.html",
         "/restaurant.html",
+        "/review.html",
         "/css/styles.css",
         "/css/styleRes.css",
         "/js/idb.js",

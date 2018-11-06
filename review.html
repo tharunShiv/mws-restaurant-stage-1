@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Application built using real time API from mapbox, and using Javascript. It is also a Progressive Web App, so it works offline also using Cache APIs">
+    <meta name="keywords" content="pwa,mobile,web,specialist,project,challenge,restaurant,reviews,responsive,offline">
+    <meta name="author" content="tharun shiv">
+    <meta name="theme-color" content="#252831">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
+    <title>Restaurant Reviews</title>
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <h1>
+                <a href="index.html" tabindex="0">Restaurant Reviews</a>
+            </h1>
+
+        </nav>
+    </header>
+    <main id="maincontent form-bound">
+        <p id="offline" class="message warn">You're offline and viewing stored data.</p>
+        <p id="no-data" class="message error">You're offline and local data is unavailable.</p>
+        <p id="data-saved" class="message success">Server data was saved for offline mode.</p>
+        <p id="save-error" class="message error">Server data couldn't be saved offline.</p>
+
+        <form id="review-form" class="review-form" method="post" action="">
+            <div>
+                <!-- ID will be pre-filled by JavaScript-->
+                <!-- iOS requires using pattern="\d*" to show the numeric keyboard. -->
+                <label id="restaurant-id-label" for="restaurant-id-input" class="mdc-floating-label">Restaurant ID</label>
+                <br/>
+                <input id="restaurant-id-input" class="mdc-text-field__input" name="restaurant_id" type="number" pattern="\d*" required>
+
+
+            </div>
+            <br/>
+            <div>
+                <label for="name-input">Name</label>
+                <br/>
+                <input id="name-input" name="name" type="text" required>
+
+            </div>
+            <br/>
+            <div>
+                <label>Rating</label>
+                <br/>
+                <select id="restaurant-rating-select" name="rating">
+                    <option value="" disabled="" selected=""></option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+
+            </div>
+            <br/>
+            <div>
+                <label for="comments-input">Comments</label>
+                <br/>
+                <input id="comments-input" name="comments" type="text" required>
+
+            </div>
+            <div class="button-container">
+                <button type="button" onclick="cancelReview()">
+                    Cancel
+                </button>
+                <button class="next">
+                    Next
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer id="footer">
+        Copyright (c) 2017
+        <a href="index.html" tabindex="0" aria-label="Restaurant Reviews Back to Main Screen"></a>
+        <strong>Restaurant Reviews</strong>
+        </a> All Rights Reserved.
+    </footer>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            console.log('[DEBUG] Service worker is supported.')
+            // Use the window load event to keep the page load performant
+            // https://developers.google.com/web/fundamentals/primers/service-workers/registration
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log(`[DEBUG] Service worker registered with scope: ${registration.scope}`);
+                    })
+                    .catch(error => {
+                        console.log(`[DEBUG] Service worker registration failed, error: ${error}`);
+                    });
+            });
+        } else {
+            console.log('[DEBUG] Service worker is not supported.')
+        }
+    </script>
+
+    <script async defer src="js/idb.js"></script>
+    <script async defer src="js/dbhelper.js"></script>
+    <script async src="js/main.js"></script>
+    <script src="js/review.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAX_LHDqQISAfJ-oMb1x_g9b_1lmnYVjeE&libraries=places&callback=initMap"></script>
+</body>
+
+</html>

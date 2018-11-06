@@ -83,7 +83,62 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     fillRestaurantHoursHTML();
   }
   // fill reviews
-  fillReviewsHTML();
+  // fillReviewsHTML();
+  loadReviewsNetworkFirst(self.restaurant.id);
+};
+
+/**
+ * Fetch reviews from a restaurant by its ID from network and fallback to
+ * IndexedDB, update UI.
+ * http://localhost:1337/reviews/?restaurant_id=<restaurant_id>
+ */
+const loadReviewsNetworkFirst = id => {
+  const container = document.getElementById("reviews-container");
+  const title = document.createElement("h5");
+  title.setAttribute("tabindex", "0");
+  title.innerHTML = "Reviews";
+  container.appendChild(title);
+
+  const endpointReviewsById = `http://localhost:1337/reviews/?restaurant_id=${id}`;
+  DBHelper.getServerData(endpointReviewsById)
+    .then(dataFromNetwork => {
+      console.log("DAta received from network");
+      const ul = document.getElementById("reviews-list");
+      dataFromNetwork.forEach(review => {
+        ul.appendChild(createReviewHTML(review));
+      });
+      container.appendChild(ul);
+      // updateReviewsUI(dataFromNetwork);
+      saveReviewsDataLocally(dataFromNetwork)
+        .then(() => {
+          DBHelper.setLastUpdated(new Date());
+          // DBHelper.messageDataSaved();
+        })
+        .catch(err => {
+          // DBHelper.messageSaveError();
+          console.warn(err);
+        });
+    })
+    .catch(err => {
+      console.log(
+        "[DEBUG] Network requests have failed, this is expected if offline"
+      );
+      getLocalReviewsByIdData(id)
+        .then(offlineData => {
+          // DBHelper.messageOffline();
+          // updateReviewsUI(offlineData);
+          console.log("fetching reviews from IDB");
+          const ul = document.getElementById("reviews-list");
+          offlineData.forEach(review => {
+            ul.appendChild(createReviewHTML(review));
+          });
+          container.appendChild(ul);
+        })
+        .catch(err => {
+          // DBHelper.messageNoData();
+          console.warn(err);
+        });
+    });
 };
 
 /**
@@ -108,6 +163,20 @@ fillRestaurantHoursHTML = (
   }
 };
 
+// Get reviews by id data from object store reviews, using the index on
+// restaurant_id
+function getLocalReviewsByIdData(id) {
+  if (!("indexedDB" in window)) {
+    return null;
+  }
+  return dbPromise.then(db => {
+    const tx = db.transaction("reviews", "readonly");
+    const store = tx.objectStore("reviews");
+    const index = store.index("restaurant_id");
+    // Make sure you're using a number for id.
+    return index.getAll(parseInt(id));
+  });
+}
 /**
  * Create all reviews HTML and add them to the webpage.
  */
@@ -117,7 +186,8 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   title.setAttribute("tabindex", "0");
   title.innerHTML = "Reviews";
   container.appendChild(title);
-
+  console.log("Type = " + reviews);
+  // reviews = getLocalReviewsByIdData(getParameterByName("id"));
   if (!reviews) {
     const noReviews = document.createElement("p");
     noReviews.innerHTML = "No reviews yet!";
@@ -129,6 +199,22 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     ul.appendChild(createReviewHTML(review));
   });
   container.appendChild(ul);
+  saveReviewsDataLocally(reviews);
+
+  getLocalReviewsByIdData(id)
+    .then(offlineData => {
+      // DBHelper.messageOffline();
+      // updateReviewsUI(offlineData);
+      const ul = document.getElementById("reviews-list");
+      reviews.forEach(review => {
+        ul.appendChild(createReviewHTML(review));
+      });
+      container.appendChild(ul);
+    })
+    .catch(err => {
+      // DBHelper.messageNoData();
+      console.warn(err);
+    });
 };
 
 /**
@@ -181,6 +267,26 @@ getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, " "));
 };
 
+function moveToReview() {
+  const id = getParameterByName("id");
+  console.log("The id: " + id);
+  console.log(
+    window.location.protocol +
+      "//" +
+      window.location.hostname +
+      "/review.html?id=" +
+      id
+  );
+
+  window.location.href =
+    window.location.protocol +
+    "//" +
+    window.location.hostname +
+    ":" +
+    window.location.port +
+    "/review.html?id=" +
+    id;
+}
 // let restaurant;
 // var newMap;
 
