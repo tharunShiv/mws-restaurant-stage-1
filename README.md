@@ -67,3 +67,36 @@ For the Restaurant Reviews projects, you will incrementally convert a static web
 1. index.html working
 2. restaurant.html working ( the pages which were visited when online )
 3. The images which were loaded when online, because of lazy loading ( the tradeoff )
+
+## Project Overview: Stage 3
+
+## Steps to get the project up and running
+
+    1. Run the development server : Download it from here: https://github.com/udacity/mws-restaurant-stage-3
+    2. Run the development server by using the command: 'node server' at mws-restaurant-stage-3 directory
+    3. Go to this project directory: Install Live Server
+    4. npm install -g live-server
+    5. Come to this project directory again and use the command 'live-server'
+    6. Open the url using Chrome.
+
+## Project Overview
+
+Add a form to allow users to submit their own reviews.
+Add functionality to defer submission of the form until connection is re-established.
+
+## Tested scenarios
+
+## Online
+
+1. index.html working
+2. restaurant.html working
+3. Lazy Loading of images working
+4. reviews.html working
+5. reviews are stored and retrieved perfectly
+
+## Offline
+
+1. index.html working
+2. restaurant.html working ( the pages which were visited when online )
+3. The images which were loaded when online, because of lazy loading ( the tradeoff )
+4. reviews.html working and reviews are not accepted when offline
