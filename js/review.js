@@ -39,6 +39,7 @@ const createReviewNetworkFirst = reviewFormData => {
       console.log(
         "[DEBUG] Network requests have failed, this is expected if offline"
       );
+      alert("Sorry you are offline, You have to online to be post a review");
       // Background sync should show a notification.
       // Redirect back to restaurant info page.
       window.location = `restaurant.html?id=${elementRestaurantIdInput.value}`;
