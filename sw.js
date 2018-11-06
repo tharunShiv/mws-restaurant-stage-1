@@ -16,7 +16,9 @@ self.addEventListener("install", function(event) {
         "/js/dbhelper.js",
         "/js/main.js",
         "/js/restaurant_info.js",
-        "/manifest.json"
+        "/manifest.json",
+        "/js/review.js"
+        
       ]);
     })
   );
@@ -47,9 +49,17 @@ function serveStatic(request) {
           cache.put(request, net_response.clone());
           return net_response;
         });
+      } else if(request.url.includes("review.html")){
+        console.log("INside the review.html service worker");
+        return fetch(request).then(function(net_response) {
+          cache.put(request, net_response.clone());
+          return net_response;
+        });
       } else {
         return fetch(request);
       }
+
+      
     });
   });
 }

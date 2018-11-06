@@ -85,6 +85,20 @@
     </footer>
 
     <script>
+    //Registering service worker
+    if (navigator.serviceWorker) {
+    navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then(function() {
+        console.log("SW Registration success!");
+        })
+        .catch(function(e) {
+        console.log(e);
+        });
+    }
+    </script>
+
+    <!-- <script>
         if ('serviceWorker' in navigator) {
             console.log('[DEBUG] Service worker is supported.')
             // Use the window load event to keep the page load performant
@@ -101,13 +115,13 @@
         } else {
             console.log('[DEBUG] Service worker is not supported.')
         }
-    </script>
+    </script> -->
 
     <script async defer src="js/idb.js"></script>
     <script async defer src="js/dbhelper.js"></script>
-    <script async src="js/main.js"></script>
+    <!-- <script async src="js/main.js"></script> -->
     <script src="js/review.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAX_LHDqQISAfJ-oMb1x_g9b_1lmnYVjeE&libraries=places&callback=initMap"></script>
+    <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAX_LHDqQISAfJ-oMb1x_g9b_1lmnYVjeE&libraries=places&callback=initMap"></script> -->
 </body>
 
 </html>
