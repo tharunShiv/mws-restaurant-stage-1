@@ -3,6 +3,7 @@
 ### About the Project
 
 It is a Progressive Web App, which works with service-workers to produce websites that work offline too. They load faster, install on phone, desktop, and visually similar to hybrid apps.<br>
+
 <a href="https://tharunshiv.ml/pwas-adv-disadv/tharunshiv/">Click here to Read about PWAs here - Their Advantages and Disadvantages</a>
 
 ### Live DEMO : ( NOT UPDATED FOR STAGE 2 )
@@ -93,6 +94,7 @@ Add functionality to defer submission of the form until connection is re-establi
 3. Lazy Loading of images working
 4. reviews.html working
 5. reviews are stored and retrieved perfectly
+6. Favourite feature implemented
 
 ## Offline
 
@@ -100,3 +102,4 @@ Add functionality to defer submission of the form until connection is re-establi
 2. restaurant.html working ( the pages which were visited when online )
 3. The images which were loaded when online, because of lazy loading ( the tradeoff )
 4. reviews.html working and reviews are not accepted when offline
+5. No posting review offline

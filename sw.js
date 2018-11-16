@@ -1,343 +1,215 @@
-let version = "1.6.0";
-let staticCacheName = "mws-rrs3-" + version;
-let DBName = "mws-rrs3";
-let DBVersion = 1;
-let dbPromise;
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.3.0/workbox-sw.js');
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    (function() {
-      self.clients.claim();
-      initDB();
-    })()
-  );
-});
-
-/*
- * Adapted from https://developers.google.com/web/ilt/pwa/lab-caching-files-with-service-worker
- * Another way to cache is to cache it in 'install' event, but I am not sure if rubrics demands that
- * It says visited page should show when there is no network access so only caching requests as they happen
+/**
+ * Workbox 3.3.0
+ * Workbox - https://developers.google.com/web/tools/workbox/
+ * Codelab - https://codelabs.developers.google.com/codelabs/workbox-lab/
+ *
+ * Workbox creates a configuration file (in this case workbox-config.js) that
+ * workbox-cli uses to generate service workers. The config file specifies where
+ * to look for files (globDirectory), which files to precache (globPatterns),
+ * and the file names for our source and production service workers (swSrc and
+ * swDest, respectively). We can also modify this config file directly to change
+ * what files are precached.
+ * The importScripts call imports the workbox-sw.js library so the workbox
+ * object gives our service worker access to all the Workbox modules.
  */
-self.addEventListener("fetch", function(event) {
-  // console.log('Fetch event for ', event.request.url);
 
-  // IDB case
-  if (event.request.url.endsWith("localhost:1337/restaurants")) {
-    // fetching restaurants, intervene with IDB
-    event.respondWith(
-      // try to read data
-      dbPromise
-        .then(function(db) {
-          var tx = db.transaction("restaurants", "readonly");
-          var store = tx.objectStore("restaurants");
-          return store.getAll();
-        })
-        .then(function(items) {
-          // read
-          if (!items.length) {
-            // fetch it from net
-            return fetch(event.request).then(function(response) {
-              return response
-                .clone()
-                .json()
-                .then(json => {
-                  // add to db
-                  console.log("event respond fetch from net");
-                  addAllData(json);
-                  return response;
-                });
-            });
-          } else {
-            // already in DB
-            console.log("event respond read from DB");
-            let response = new Response(JSON.stringify(items), {
-              headers: new Headers({
-                "Content-type": "application/json",
-                "Access-Control-Allow-Credentials": "true"
-              }),
-              type: "cors",
-              status: 200
-            });
-            return response;
-          }
-        })
-    );
+if (workbox) {
+  console.log(`[DEBUG] Workbox is loaded.`);
 
-    return; // don't go down
-  }
+  // Debugging Workbox
+  // Force development builds
+  // workbox.setConfig({ debug: true });
+  // The most verbose - displays all logs.
+  // workbox.core.setLogLevel(workbox.core.LOG_LEVELS.debug);
+  // Force production builds
+  workbox.setConfig({ debug: false });
 
-  // normal cases
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then(function(response) {
-        if (response) {
-          console.log("Found ", event.request.url, " in cache");
-          return response;
-        }
-        // console.log('Network request for ', event.request.url);
-        return fetch(event.request).then(function(response) {
-          return caches.open(staticCacheName).then(function(cache) {
-            if (event.request.url.indexOf("maps") < 0) {
-              // don't cache google maps
-              // ^ it's not a site asset, is it?
-              // console.log('Saving ' + event.request.url + ' into cache.');
-              cache.put(event.request.url, response.clone());
-            }
-            return response;
-          });
-        });
-      })
-      .catch(function(error) {
-        console.log("offline");
-      })
-  );
-});
-
-/* delete old cache */
-self.addEventListener("activate", function(event) {
-  console.log("Activating new service worker...");
-
-  let cacheWhitelist = [staticCacheName];
-
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.map(function(cacheName) {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
-
-// IDB Integration
-// https://developers.google.com/web/ilt/pwa/working-with-indexeddb
-
-function initDB() {
-  dbPromise = idb.open(DBName, DBVersion, function(upgradeDb) {
-    console.log("making DB Store");
-    if (!upgradeDb.objectStoreNames.contains("restaurants")) {
-      upgradeDb.createObjectStore("restaurants", { keyPath: "id" });
-    }
+  // Custom Cache Names
+  // https://developers.google.com/web/tools/workbox/guides/configure-workbox
+  workbox.core.setCacheNameDetails({
+    prefix: 'pwa',
+    suffix: 'v1'
   });
-}
-
-function addAllData(rlist) {
-  let tx;
-  dbPromise
-    .then(function(db) {
-      tx = db.transaction("restaurants", "readwrite");
-      var store = tx.objectStore("restaurants");
-      rlist.forEach(function(res) {
-        console.log("adding", res);
-        store.put(res); // put is safer because it doesn't give error on duplicate add
-      });
-      return tx.complete;
-    })
-    .then(function() {
-      console.log("All data added to DB successfully");
-    })
-    .catch(function(err) {
-      tx.abort();
-      console.log("error in DB adding", err);
-      return false;
-    });
-}
-
-// reviews
-// https://developers.google.com/web/updates/2015/12/background-sync
-
-self.addEventListener("sync", function(event) {
-  if (event.tag === "sync") {
-    event.waitUntil(
-      sendReviews()
-        .then(() => {
-          console.log("synced");
-        })
-        .catch(err => {
-          console.log(err, "error syncing");
-        })
-    );
-  } else if (event.tag === "favorite") {
-    event.waitUntil(
-      sendFavorites()
-        .then(() => {
-          console.log("favorites synced");
-        })
-        .catch(err => {
-          console.log(err, "error syncing favorites");
-        })
-    );
+  // The precacheAndRoute method of the precaching module takes a precache
+  // "manifest" (a list of file URLs with "revision hashes") to cache on service
+  // worker installation. It also sets up a cache-first strategy for the
+  // specified resources, serving them from the cache by default.
+  // In addition to precaching, the precacheAndRoute method sets up an implicit
+  // cache-first handler.
+  workbox.precaching.precacheAndRoute([
+  {
+    "url": "css/styles-bundle.min.css",
+    "revision": "f9e1ef4df97c69dbacccfc001b0be56b"
+  },
+  {
+    "url": "index.html",
+    "revision": "ef670755dbcc97695fa3499b2f86be37"
+  },
+  {
+    "url": "js/idb-bundle.min.js",
+    "revision": "ad0f48e39211e16cf26170159e69a99e"
+  },
+  {
+    "url": "js/main-bundle.min.js",
+    "revision": "e7cbbd9bd232fbde1045de54cc87a9d7"
+  },
+  {
+    "url": "js/resto-bundle.min.js",
+    "revision": "555c3ccb217558e07ceb5fde039bf37f"
+  },
+  {
+    "url": "js/review-bundle.min.js",
+    "revision": "fc80076e1ae769f695889727f9eca8bd"
+  },
+  {
+    "url": "restaurant.html",
+    "revision": "c1b187a43faf371622ee632bc834ccd7"
+  },
+  {
+    "url": "review.html",
+    "revision": "0f3e62f81b53b4e9512c69bd9062ae82"
+  },
+  {
+    "url": "img/touch/homescreen-192.png",
+    "revision": "3c51341ad47db2f4f1fcae9ed396e95b"
+  },
+  {
+    "url": "img/touch/homescreen-512.png",
+    "revision": "192c0f01d43243007c75dfecea42fc98"
+  },
+  {
+    "url": "manifest.json",
+    "revision": "70734e689aa308ac55dbc2638265dd5e"
   }
-});
+]);
 
-function sendFavorites() {
-  return idb
-    .open("favorite", 1)
-    .then(db => {
-      let tx = db.transaction("outbox", "readonly");
-      return tx.objectStore("outbox").getAll();
+  // Google Fonts
+  // https://developers.google.com/web/tools/workbox/guides/common-recipes#google_fonts
+  // https://developers.google.com/web/tools/workbox/modules/workbox-strategies#cache_first_cache_falling_back_to_network
+  workbox.routing.registerRoute(
+    new RegExp('https://fonts.(?:googleapis|gstatic).com/(.*)'),
+    workbox.strategies.cacheFirst({
+      cacheName: 'pwa-cache-googleapis',
+      plugins: [
+        new workbox.expiration.Plugin({
+          maxEntries: 30,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+        }),
+        new workbox.cacheableResponse.Plugin({
+          statuses: [0, 200]
+        }),
+      ],
+    }),
+  );
+
+  // Images
+  // https://developers.google.com/web/tools/workbox/modules/workbox-strategies#cache_first_cache_falling_back_to_network
+  // https://developers.google.com/web/tools/workbox/modules/workbox-cache-expiration
+  // Whenever the app requests images, the service worker checks the
+  // cache first for the resource before going to the network.
+  // A maximum of 60 entries will be kept (automatically removing older
+  // images) and these files will expire in 30 days.
+  workbox.routing.registerRoute(
+    /\.(?:png|gif|jpg|jpeg|svg|webp)$/,
+    workbox.strategies.cacheFirst({
+      cacheName: 'pwa-cache-images',
+      plugins: [
+        new workbox.expiration.Plugin({
+          maxEntries: 60,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+        }),
+      ],
+    }),
+  );
+
+  // Cache CSS and JavaScript files that aren't precached.
+  // https://developers.google.com/web/tools/workbox/modules/workbox-strategies#stale-while-revalidate
+  workbox.routing.registerRoute(
+    /\.(?:js|css)$/,
+    workbox.strategies.staleWhileRevalidate({
+      cacheName: 'pwa-cache-static-resources',
+    }),
+  );
+
+
+  // Restaurants
+  // https://developers.google.com/web/tools/workbox/modules/workbox-strategies#network_first_network_falling_back_to_cache
+  // http://localhost:8887/restaurant.html?id=1
+  workbox.routing.registerRoute(
+    new RegExp('restaurant.html(.*)'),
+    workbox.strategies.networkFirst({
+      cacheName: 'pwa-cache-restaurants',
+      // Status 0 is the response you would get if you request a cross-origin
+      // resource and the server that you're requesting it from is not
+      // configured to serve cross-origin resources.
+      cacheableResponse: {statuses: [0, 200]}
     })
-    .then(items => {
-      return Promise.all(
-        items.map(item => {
-          let id = item.id;
-          // delete review.id;
-          console.log("sending favorite", item);
-          // POST review
-          return fetch(
-            `http://localhost:1337/restaurants/${item.resId}/?is_favorite=${
-              item.favorite
-            }`,
-            {
-              method: "PUT"
-            }
-          )
-            .then(response => {
-              console.log(response);
-              return response.json();
-            })
-            .then(data => {
-              console.log("added favorite", data);
-              if (data) {
-                // delete from db
-                idb.open("favorite", 1).then(db => {
-                  let tx = db.transaction("outbox", "readwrite");
-                  return tx.objectStore("outbox").delete(id);
-                });
-              }
-            });
-        })
-      );
-    });
-}
+  );
 
-function sendReviews() {
-  return idb
-    .open("review", 1)
-    .then(db => {
-      let tx = db.transaction("outbox", "readonly");
-      return tx.objectStore("outbox").getAll();
+  // Reviews
+  // https://developers.google.com/web/tools/workbox/modules/workbox-strategies#stale-while-revalidate
+  // Use cache but update in the background ASAP.
+  // http://localhost:8887/review.html?id=1
+  workbox.routing.registerRoute(
+    new RegExp('review.html(.*)'),
+    workbox.strategies.cacheFirst({
+      cacheName: 'pwa-cache-restaurants',
+      // Status 0 is the response you would get if you request a cross-origin
+      // resource and the server that you're requesting it from is not
+      // configured to serve cross-origin resources.
+      cacheableResponse: {statuses: [0, 200]}
     })
-    .then(reviews => {
-      return Promise.all(
-        reviews.map(review => {
-          let reviewID = review.id;
-          delete review.id;
-          console.log("sending review", review);
-          // POST review
-          return fetch("http://localhost:1337/reviews", {
-            method: "POST",
-            body: JSON.stringify(review),
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json"
-            }
-          })
-            .then(response => {
-              console.log(response);
-              return response.json();
-            })
-            .then(data => {
-              console.log("added review", data);
-              if (data) {
-                // delete from db
-                idb.open("review", 1).then(db => {
-                  let tx = db.transaction("outbox", "readwrite");
-                  return tx.objectStore("outbox").delete(reviewID);
-                });
-              }
-            });
-        })
-      );
+  );
+
+  // Notifications
+  const showNotification = () => {
+    self.registration.showNotification('Background Sync', {
+      body: 'Success!'
     });
+  };
+
+  // Background Sync using workbox-background-sync
+  // https://developers.google.com/web/updates/2015/12/background-sync
+  // https://developers.google.com/web/tools/workbox/modules/workbox-background-sync
+  // https://codelabs.developers.google.com/codelabs/workbox-indexeddb/
+
+  // If a user tries to add an event while offline, the failed endpoint request
+  // will be saved in the background sync queue. When the user returns online,
+  // the queued requests are re-sent even if the app is closed!
+
+  // Create a Workbox Background Sync Queue, initialize backgroundSync plugin.
+  // Background sync needs to create a Queue, represented by an IndexedDB
+  // database, that is used to store failed HTTP requests.
+
+  const bgSyncPlugin = new workbox.backgroundSync.Plugin(
+    'pwa-reviews-queue',
+    {
+      maxRetentionTime: 24 * 60, // Retry for max of 24 Hours
+    },
+    {
+      callbacks: {
+        queueDidReplay: showNotification
+        // other types of callbacks could go here
+      }
+    }
+  );
+
+  // The plugin is added to the configuration of a handler,
+  // networkWithBackgroundSync.
+  const networkWithBackgroundSync = new workbox.strategies.NetworkOnly({
+    plugins: [bgSyncPlugin],
+  });
+  
+  // POST review
+  // http://localhost:1337/reviews/
+  workbox.routing.registerRoute(
+    new RegExp('http://localhost:1337/reviews/'),
+    networkWithBackgroundSync,
+    'POST'
+  );
+
+} else {
+  console.log(`[DEBUG] Workbox didn't load.`);
 }
-
-// const static_cache = "rest-static-cache-v1";
-// const image_cache = "rest-image-cache-v2";
-
-// self.addEventListener("install", function(event) {
-//   event.waitUntil(
-//     caches.open(static_cache).then(function(cache) {
-//       return cache.addAll([
-//         "/sw.js",
-//         "/",
-//         "/index.html",
-//         "/restaurant.html",
-//         "/review.html",
-//         "/css/styles.css",
-//         "/css/styleRes.css",
-//         "/js/idb.js",
-//         "/js/dbhelper.js",
-//         "/js/main.js",
-//         "/js/restaurant_info.js",
-//         "/manifest.json",
-//         "/js/review.js"
-
-//       ]);
-//     })
-//   );
-// });
-
-// function serveImage(request) {
-//   return caches.open(image_cache).then(function(cache) {
-//     return cache.match(request).then(function(response) {
-//       if (response) return response;
-
-//       return fetch(request).then(function(net_response) {
-//         cache.put(request, net_response.clone());
-//         return net_response;
-//       });
-//     });
-//   });
-// }
-
-// function serveStatic(request) {
-//   return caches.open(static_cache).then(function(cache) {
-//     return cache.match(request).then(function(response) {
-//       // if statically cached item found - return it
-//       if (response) return response;
-
-//       // if it's a restaurant detail page - cache it
-//       if (request.url.includes("restaurant.html")) {
-//         return fetch(request).then(function(net_response) {
-//           cache.put(request, net_response.clone());
-//           return net_response;
-//         });
-//       } else if(request.url.includes("review.html")){
-//         console.log("INside the review.html service worker");
-//         return fetch(request).then(function(net_response) {
-//           cache.put(request, net_response.clone());
-//           return net_response;
-//         });
-//       } else {
-//         return fetch(request);
-//       }
-
-//     });
-//   });
-// }
-
-// self.addEventListener("fetch", function(event) {
-//   if (
-//     event.request.cache === "only-if-cached" &&
-//     event.request.mode !== "same-origin"
-//   ) {
-//     return;
-//   }
-
-//   if (event.request.url.includes("map")) return;
-
-//   if (
-//     event.request.url.endsWith(".webp") ||
-//     event.request.url.endsWith(".jpg") ||
-//     event.request.url.endsWith(".svg")
-//   ) {
-//     event.respondWith(serveImage(event.request));
-//   } else {
-//     event.respondWith(serveStatic(event.request));
-//   }
-// });
